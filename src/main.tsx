@@ -1,9 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-
-function App() {
-  return <main>工賃シミュレーター</main>
-}
+import App from './App'
+import './styles.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

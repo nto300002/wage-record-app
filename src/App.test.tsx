@@ -45,10 +45,11 @@ describe('工賃シミュレーター', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.getByText('漢字あり')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '表示モード' }))
+    expect(screen.getByText('漢字')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'あり' })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: 'なし' }))
 
-    expect(screen.getByText('かんじなし')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'なし' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getAllByRole('option', { name: 'きいや' })).toHaveLength(2)
     expect(screen.queryByRole('option', { name: 'KIIYA' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('ごぜんのしごと')).toHaveDisplayValue('きいや')
@@ -69,7 +70,7 @@ describe('工賃シミュレーター', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: '表示モード' }))
+    await user.click(screen.getByRole('button', { name: 'なし' }))
     await user.click(screen.getByRole('button', { name: /おわる/ }))
 
     expect(screen.getByLabelText('ごぜんの時間')).toHaveValue(0)

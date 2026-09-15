@@ -46,7 +46,7 @@ describe('工賃シミュレーター', () => {
     render(<App />)
 
     expect(screen.getByText('漢字あり')).toBeInTheDocument()
-    await user.click(screen.getByRole('checkbox', { name: 'やさしい表示' }))
+    await user.click(screen.getByRole('button', { name: '表示モード' }))
 
     expect(screen.getByText('かんじなし')).toBeInTheDocument()
     expect(screen.getAllByRole('option', { name: 'きいや' })).toHaveLength(2)
@@ -69,7 +69,7 @@ describe('工賃シミュレーター', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('checkbox', { name: 'やさしい表示' }))
+    await user.click(screen.getByRole('button', { name: '表示モード' }))
     await user.click(screen.getByRole('button', { name: /おわる/ }))
 
     expect(screen.getByLabelText('ごぜんの時間')).toHaveValue(0)

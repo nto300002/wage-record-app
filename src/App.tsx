@@ -13,7 +13,7 @@ const WORK_ITEMS = [
   { id: 'PC', name: 'PC', easyName: 'ぴーしー', rate: 100 },
   { id: '就職準備', name: '就職準備', easyName: 'しゅうしょくじゅんび', rate: 100 },
   { id: 'その他内職', name: 'その他内職', easyName: 'そのた ないしょく', rate: 100 },
-  { id: '販売会（平日）参加', name: '販売会（平日）参加', easyName: 'はんばいかい', rate: 150 },
+  { id: '販売会（平日）参加', name: '販売会（平日）参加', easyName: 'はんばいかい さんか', rate: 150 },
   { id: 'シルクスクリーン', name: 'シルクスクリーン', easyName: 'しるくすくりーん', rate: 300 },
 ] as const
 const BONUSES = [0, 50, 100, 200, 300, 400, 500]

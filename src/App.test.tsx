@@ -61,4 +61,15 @@ describe('工賃シミュレーター', () => {
     expect(screen.getAllByRole('option', { name: 'るーと ふぁいぶ' })).toHaveLength(2)
     expect(screen.getAllByRole('option', { name: 'はんばいかい さんか' })).toHaveLength(2)
   })
+
+  it('時間と分は0を表示する', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('checkbox', { name: 'やさしい表示' }))
+    await user.click(screen.getByRole('button', { name: /おわる/ }))
+
+    expect(screen.getByLabelText('ごぜんの時間')).toHaveValue(0)
+    expect(screen.getByLabelText('ごぜんの分')).toHaveValue(0)
+  })
 })

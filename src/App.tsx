@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { calculateWage, type Piecework, type WageSession } from './domain/calculation'
 
 const WORK_ITEMS = [
@@ -29,8 +29,33 @@ function App() {
   const [workNames, setWorkNames] = useState<Record<SessionKey, string>>({ am: 'KIIYA', pm: 'PC' })
   const [easyDisplay, setEasyDisplay] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [tourStep, setTourStep] = useState(0)
   const [pieceworks, setPieceworks] = useState<Piecework[]>([{ unitPrice: 10, quantity: 20 }, { unitPrice: 5, quantity: 30 }])
   const result = useMemo(() => calculateWage({ ...sessions, pieceworks }), [sessions, pieceworks])
+  const tourTargets = useMemo(() => ['am-work', 'am-hours', 'am-bonus', 'am-total', ...pieceworks.flatMap((_, index) => [`piecework-${index}-name`, `piecework-${index}-price`, `piecework-${index}-quantity`, `piecework-${index}-amount`]), 'total'], [pieceworks])
+  const currentTourTarget = tourTargets[tourStep]
+
+  useEffect(() => {
+    document.querySelectorAll('.tour-focus').forEach((element) => element.classList.remove('tour-focus'))
+    if (!showHelp || !currentTourTarget) return
+    let element: HTMLElement | null = null
+    if (currentTourTarget === 'am-work') element = document.querySelector('.session-card:first-of-type select')
+    if (currentTourTarget === 'am-hours') element = document.querySelector('.session-card:first-of-type .time-fields input')
+    if (currentTourTarget === 'am-bonus') element = document.querySelector('.session-card:first-of-type .session-grid > label:nth-of-type(2) select')
+    if (currentTourTarget === 'am-total') element = document.querySelector('.session-card:first-of-type .session-total')
+    if (currentTourTarget === 'total') element = document.querySelector('.total-panel')
+    const pieceworkMatch = currentTourTarget.match(/^piecework-(\d+)-(name|price|quantity|amount)$/)
+    if (pieceworkMatch) {
+      const row = document.querySelectorAll<HTMLElement>('.piecework-row')[Number(pieceworkMatch[1])]
+      const field = pieceworkMatch[2]
+      element = field === 'name' ? row?.querySelector('label:nth-of-type(1) input') ?? null : field === 'price' ? row?.querySelector('label:nth-of-type(2) input') ?? null : field === 'quantity' ? row?.querySelector('label:nth-of-type(3) input') ?? null : row?.querySelector('output') ?? null
+    }
+    if (element) {
+      element.classList.add('tour-focus')
+      if (element.tagName === 'OUTPUT' || element.classList.contains('total-panel')) element.tabIndex = -1
+      element.focus()
+    }
+  }, [showHelp, currentTourTarget])
 
   const updateSession = (key: SessionKey, patch: Partial<WageSession>) => setSessions((current) => ({ ...current, [key]: { ...current[key], ...patch } }))
   const selectWork = (key: SessionKey, name: string) => {
@@ -43,8 +68,8 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><div className="mode-selector" aria-label="表示モード"><span>{easyDisplay ? 'かんじ' : '漢字'}</span><button type="button" className={!easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={!easyDisplay} onClick={() => setEasyDisplay(false)}>あり</button><button type="button" className={easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={easyDisplay} onClick={() => setEasyDisplay(true)}>なし</button></div><button className="help-button" type="button" onClick={() => setShowHelp(true)}>？ つかいかた</button></div></header>
-      {showHelp && <div className="help-backdrop" role="presentation"><section className="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-heading"><h2 id="help-heading">{easyDisplay ? 'このアプリの つかいかた' : 'このアプリの使い方'}</h2><ol>{(easyDisplay ? ['ごぜんの しごとを えらびます', 'はたらいた じかんを いれます', 'ごごの しごとを えらびます', 'できたかずを いれます', 'きんがくを かくにんします'] : ['午前の仕事を選びます', '働いた時間を入力します', '午後の仕事を選びます', '出来高を入力します', '金額を確認します']).map((step) => <li key={step}>{step}</li>)}</ol><button type="button" onClick={() => setShowHelp(false)}>{easyDisplay ? 'とじる' : '閉じる'}</button></section></div>}
+      <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><div className="mode-selector" aria-label="表示モード"><span>{easyDisplay ? 'かんじ' : '漢字'}</span><button type="button" className={!easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={!easyDisplay} onClick={() => setEasyDisplay(false)}>あり</button><button type="button" className={easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={easyDisplay} onClick={() => setEasyDisplay(true)}>なし</button></div><button className="help-button" type="button" onClick={() => { setTourStep(0); setShowHelp(true) }}>？ つかいかた</button></div></header>
+      {showHelp && <div className="tour-backdrop" role="presentation" onClick={() => tourStep + 1 < tourTargets.length ? setTourStep((step) => step + 1) : setShowHelp(false)}><p className="tour-instruction">{easyDisplay ? 'ひかっている ところを みてください。がめんを おすと つぎに すすみます。' : '明るく表示された項目を確認してください。画面をクリックすると次へ進みます。'}</p><button className="tour-close" type="button" onClick={(event) => { event.stopPropagation(); setShowHelp(false) }}>{easyDisplay ? 'とじる' : '閉じる'}</button></div>}
       <SessionCard title={easyDisplay ? 'ごぜん' : '午前'} id="am" session={sessions.am} workName={workNames.am} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('am', value)} onChange={(patch) => updateSession('am', patch)} result={result.am} />
       <SessionCard title={easyDisplay ? 'ごご' : '午後'} id="pm" session={sessions.pm} workName={workNames.pm} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('pm', value)} onChange={(patch) => updateSession('pm', patch)} result={result.pm} />
       <section className="card piecework-card" aria-labelledby="piecework-heading"><div className="section-heading"><span className="section-number">3</span><h2 id="piecework-heading">{easyDisplay ? 'できだか' : '出来高'}</h2><span>{easyDisplay ? 'つくった かずに おうじてもらえる きんがくです。' : '作った数におうじてもらえる金額です。'}</span></div>
@@ -58,7 +83,7 @@ function App() {
 }
 
 function SessionCard({ title, id, session, workName, easyDisplay, onWorkChange, onChange, result }: { title: string; id: SessionKey; session: WageSession; workName: string; easyDisplay: boolean; onWorkChange: (value: string) => void; onChange: (patch: Partial<WageSession>) => void; result: number }) {
-  return <section className="card session-card" aria-labelledby={`${id}-heading`}><div className="section-heading"><span className="section-number">{id === 'am' ? '1' : '2'}</span><h2 id={`${id}-heading`}>{title}</h2></div><div className="session-grid"><label>{easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ'}<select aria-label={`${title}のしごと`} value={workName} onChange={(event) => onWorkChange(event.target.value)}><option value="">作業なし</option>{WORK_ITEMS.map((workItem) => <option key={workItem.id} value={workItem.id}>{easyDisplay ? workItem.easyName : workItem.name}</option>)}</select><span className="rate">{easyDisplay ? '1じかん あたり' : '1時間あたり'} {session.hourlyRate}{easyDisplay ? 'えん' : '円'}</span></label><div><span className="field-label">{easyDisplay ? 'はたらいた じかん' : 'はたらいた時間'}</span><div className="time-fields"><label><input aria-label={`${title}の時間`} type="number" min="0" value={session.hours} onChange={(event) => onChange({ hours: Number(event.target.value) })} /> {easyDisplay ? 'じかん' : '時間'}</label><label><input aria-label={`${title}の分`} type="number" min="0" max="59" value={session.minutes} onChange={(event) => onChange({ minutes: Number(event.target.value) })} /> {easyDisplay ? 'ふん' : '分'}</label></div></div><label>{easyDisplay ? 'かてん' : '能力の加点'}<select aria-label={`${title}の能力加点`} value={session.bonus} onChange={(event) => onChange({ bonus: Number(event.target.value) })}>{BONUSES.map((bonus) => <option key={bonus} value={bonus}>{bonus === 0 ? 'なし' : `${bonus}${easyDisplay ? 'えん' : '円'}`}</option>)}</select></label><output className="session-total">{title}{easyDisplay ? 'の こうちん' : 'の工賃'}<strong>{result}{easyDisplay ? 'えん' : '円'}</strong></output></div></section>
+  return <section className="card session-card" aria-labelledby={`${id}-heading`}><div className="section-heading"><span className="section-number">{id === 'am' ? '1' : '2'}</span><h2 id={`${id}-heading`}>{title}</h2></div><div className="session-grid"><label>{easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ'}<select aria-label={`${title}のしごと`} value={workName} onChange={(event) => onWorkChange(event.target.value)}><option value="">作業なし</option>{WORK_ITEMS.map((workItem) => <option key={workItem.id} value={workItem.id}>{easyDisplay ? workItem.easyName : workItem.name}</option>)}</select><span className="rate">{easyDisplay ? '1じかん あたり' : '1時間あたり'} {session.hourlyRate}{easyDisplay ? 'えん' : '円'}</span></label><div><span className="field-label">{easyDisplay ? 'はたらいた じかん' : '働いた時間'}</span><div className="time-fields"><label><input aria-label={`${title}の時間`} type="number" min="0" value={session.hours} onChange={(event) => onChange({ hours: Number(event.target.value) })} /> {easyDisplay ? 'じかん' : '時間'}</label><label><input aria-label={`${title}の分`} type="number" min="0" max="59" value={session.minutes} onChange={(event) => onChange({ minutes: Number(event.target.value) })} /> {easyDisplay ? 'ふん' : '分'}</label></div></div><label>{easyDisplay ? 'かてん' : '能力の加点'}<select aria-label={`${title}の能力加点`} value={session.bonus} onChange={(event) => onChange({ bonus: Number(event.target.value) })}>{BONUSES.map((bonus) => <option key={bonus} value={bonus}>{bonus === 0 ? 'なし' : `${bonus}${easyDisplay ? 'えん' : '円'}`}</option>)}</select></label><output className="session-total">{title}{easyDisplay ? 'の こうちん' : 'の工賃'}<strong>{result}{easyDisplay ? 'えん' : '円'}</strong></output></div></section>
 }
 
 export default App

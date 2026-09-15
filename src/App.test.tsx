@@ -50,5 +50,8 @@ describe('工賃シミュレーター', () => {
     expect(screen.queryByRole('option', { name: 'KIIYA' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('ごぜんのしごと')).toHaveDisplayValue('きいや')
     expect(screen.getByRole('heading', { name: 'ごぜん' })).toBeInTheDocument()
+    expect(screen.getAllByRole('option', { name: 'るみりゅー わいなりー' })).toHaveLength(2)
+    expect(screen.getAllByRole('option', { name: 'るーと ふぁいぶ' })).toHaveLength(2)
+    expect(screen.getAllByRole('option', { name: 'はんばいかい' })).toHaveLength(2)
   })
 })

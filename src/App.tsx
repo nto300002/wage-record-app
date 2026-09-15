@@ -3,9 +3,9 @@ import { calculateWage, type Piecework, type WageSession } from './domain/calcul
 
 const WORK_ITEMS = [
   { id: 'Le Milieu_農園', name: 'Le Milieu_農園', easyName: 'るみりゅー のうえん', rate: 150 },
-  { id: 'Le Milieu_フィナリー', name: 'Le Milieu_フィナリー', easyName: 'るみりゅー ふぃなりー', rate: 150 },
+  { id: 'Le Milieu_フィナリー', name: 'Le Milieu_フィナリー', easyName: 'るみりゅー わいなりー', rate: 150 },
   { id: 'KIIYA', name: 'KIIYA', easyName: 'きいや', rate: 150 },
-  { id: 'ルート5', name: 'ルート5', easyName: 'るーと ご', rate: 150 },
+  { id: 'ルート5', name: 'ルート5', easyName: 'るーと ふぁいぶ', rate: 150 },
   { id: '東洋計器', name: '東洋計器', easyName: 'とうようけいき', rate: 150 },
   { id: '販売会準備・片付け', name: '販売会準備・片付け', easyName: 'はんばいかい じゅんび・かたづけ', rate: 100 },
   { id: '手芸', name: '手芸', easyName: 'しゅげい', rate: 100 },
@@ -13,7 +13,7 @@ const WORK_ITEMS = [
   { id: 'PC', name: 'PC', easyName: 'ぴーしー', rate: 100 },
   { id: '就職準備', name: '就職準備', easyName: 'しゅうしょくじゅんび', rate: 100 },
   { id: 'その他内職', name: 'その他内職', easyName: 'そのた ないしょく', rate: 100 },
-  { id: '販売会（平日）参加', name: '販売会（平日）参加', easyName: 'はんばいかい（へいじつ）さんか', rate: 150 },
+  { id: '販売会（平日）参加', name: '販売会（平日）参加', easyName: 'はんばいかい', rate: 150 },
   { id: 'シルクスクリーン', name: 'シルクスクリーン', easyName: 'しるくすくりーん', rate: 300 },
 ] as const
 const BONUSES = [0, 50, 100, 200, 300, 400, 500]
@@ -42,7 +42,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><label className="easy-toggle"><input aria-label="やさしい表示" type="checkbox" checked={easyDisplay} onChange={(event) => setEasyDisplay(event.target.checked)} />やさしい表示</label><button className="help-button" type="button">？ つかいかた</button></div></header>
+      <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><label className="easy-toggle"><span>{easyDisplay ? 'やさしい ひょうじ' : 'やさしい表示'}</span><input aria-label="やさしい表示" type="checkbox" checked={easyDisplay} onChange={(event) => setEasyDisplay(event.target.checked)} /><span className="switch-track" aria-hidden="true"><span className="switch-thumb" /></span></label><button className="help-button" type="button">？ つかいかた</button></div></header>
       <SessionCard title={easyDisplay ? 'ごぜん' : '午前'} id="am" session={sessions.am} workName={workNames.am} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('am', value)} onChange={(patch) => updateSession('am', patch)} result={result.am} />
       <SessionCard title={easyDisplay ? 'ごご' : '午後'} id="pm" session={sessions.pm} workName={workNames.pm} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('pm', value)} onChange={(patch) => updateSession('pm', patch)} result={result.pm} />
       <section className="card piecework-card" aria-labelledby="piecework-heading"><div className="section-heading"><span className="section-number">3</span><h2 id="piecework-heading">出来高</h2><span>作った数におうじてもらえる金額です。</span></div>

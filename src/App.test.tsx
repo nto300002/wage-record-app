@@ -12,7 +12,7 @@ describe('工賃シミュレーター', () => {
     expect(screen.getByRole('heading', { name: '午前' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '午後' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '出来高' })).toBeInTheDocument()
-    expect(screen.getAllByText('仕事を選ぶ')).toHaveLength(2)
+    expect(screen.getAllByText('仕事を選ぶ')).toHaveLength(4)
     expect(screen.getByRole('status', { name: '今日の工賃合計' })).toHaveTextContent('1,225円')
 
     await user.selectOptions(screen.getByLabelText('午前のしごと'), 'PC')
@@ -51,7 +51,7 @@ describe('工賃シミュレーター', () => {
 
     expect(screen.getByText('かんじ')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'なし' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getAllByRole('option', { name: 'きいや' })).toHaveLength(2)
+    expect(screen.getAllByRole('option', { name: 'きいや' })).toHaveLength(4)
     expect(screen.queryByRole('option', { name: 'KIIYA' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('ごぜんのしごと')).toHaveDisplayValue('きいや')
     expect(screen.getByRole('heading', { name: 'ごぜん' })).toBeInTheDocument()
@@ -62,9 +62,9 @@ describe('工賃シミュレーター', () => {
     expect(screen.queryByText('しょうけい')).not.toBeInTheDocument()
     expect(screen.getByRole('status', { name: '今日の工賃合計' })).toHaveTextContent('えん')
     expect(screen.getByRole('status', { name: '今日の工賃合計' })).not.toHaveTextContent('円')
-    expect(screen.getAllByRole('option', { name: 'るみりゅー わいなりー' })).toHaveLength(2)
-    expect(screen.getAllByRole('option', { name: 'るーと ふぁいぶ' })).toHaveLength(2)
-    expect(screen.getAllByRole('option', { name: 'はんばいかい さんか' })).toHaveLength(2)
+    expect(screen.getAllByRole('option', { name: 'るみりゅー わいなりー' })).toHaveLength(4)
+    expect(screen.getAllByRole('option', { name: 'るーと ふぁいぶ' })).toHaveLength(4)
+    expect(screen.getAllByRole('option', { name: 'はんばいかい さんか' })).toHaveLength(4)
   })
 
   it('時間と分は0を表示する', async () => {
@@ -83,12 +83,23 @@ describe('工賃シミュレーター', () => {
     render(<App />)
 
     await user.click(screen.getByRole('button', { name: '？ つかいかた' }))
-    expect(screen.getByText('明るく表示された項目を確認してください。画面をクリックすると次へ進みます。')).toBeInTheDocument()
+    expect(screen.getByText('今日働いた仕事の内容を選びます')).toBeInTheDocument()
     expect(screen.getByLabelText('午前のしごと')).toHaveFocus()
     await user.click(screen.getByRole('button', { name: '閉じる' }))
     await user.click(screen.getByRole('button', { name: 'なし' }))
     await user.click(screen.getByRole('button', { name: '？ つかいかた' }))
     expect(screen.getByLabelText('ごぜんのしごと')).toHaveFocus()
-    expect(screen.getByText('ひかっている ところを みてください。がめんを おすと つぎに すすみます。')).toBeInTheDocument()
+    expect(screen.getByText('きょう はたらいた おしごとの ないようを えらびます')).toBeInTheDocument()
+  })
+
+  it('出来高の名前を選択式と自由入力で切り替えられる', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByLabelText('出来高1の名前')).toHaveRole('combobox')
+    await user.click(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0])
+    expect(screen.getByLabelText('出来高1の名前')).toHaveRole('textbox')
+    await user.click(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0])
+    expect(screen.getByLabelText('出来高1の名前')).toHaveRole('combobox')
   })
 })

@@ -6,6 +6,7 @@ export type WageSession = {
 }
 
 export type Piecework = {
+  name?: string
   unitPrice: number
   quantity: number
 }

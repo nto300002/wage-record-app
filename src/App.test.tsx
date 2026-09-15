@@ -12,6 +12,7 @@ describe('工賃シミュレーター', () => {
     expect(screen.getByRole('heading', { name: '午前' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '午後' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '出来高' })).toBeInTheDocument()
+    expect(screen.getAllByText('仕事を選ぶ')).toHaveLength(2)
     expect(screen.getByRole('status', { name: '今日の工賃合計' })).toHaveTextContent('1,225円')
 
     await user.selectOptions(screen.getByLabelText('午前のしごと'), 'PC')

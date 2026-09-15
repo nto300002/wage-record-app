@@ -39,4 +39,16 @@ describe('工賃シミュレーター', () => {
     expect(screen.getByRole('status', { name: '今日の工賃合計' })).toHaveTextContent('0円')
     expect(screen.getByLabelText('午前のしごと')).toHaveValue('')
   })
+
+  it('やさしい表示をONにすると業務名を平仮名で表示する', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('checkbox', { name: 'やさしい表示' }))
+
+    expect(screen.getAllByRole('option', { name: 'きいや' })).toHaveLength(2)
+    expect(screen.queryByRole('option', { name: 'KIIYA' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('ごぜんのしごと')).toHaveDisplayValue('きいや')
+    expect(screen.getByRole('heading', { name: 'ごぜん' })).toBeInTheDocument()
+  })
 })

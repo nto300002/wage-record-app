@@ -28,6 +28,7 @@ function App() {
   })
   const [workNames, setWorkNames] = useState<Record<SessionKey, string>>({ am: 'KIIYA', pm: 'PC' })
   const [easyDisplay, setEasyDisplay] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [pieceworks, setPieceworks] = useState<Piecework[]>([{ unitPrice: 10, quantity: 20 }, { unitPrice: 5, quantity: 30 }])
   const result = useMemo(() => calculateWage({ ...sessions, pieceworks }), [sessions, pieceworks])
 
@@ -42,7 +43,8 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><div className="mode-selector" aria-label="表示モード"><span>{easyDisplay ? 'かんじ' : '漢字'}</span><button type="button" className={!easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={!easyDisplay} onClick={() => setEasyDisplay(false)}>あり</button><button type="button" className={easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={easyDisplay} onClick={() => setEasyDisplay(true)}>なし</button></div><button className="help-button" type="button">？ つかいかた</button></div></header>
+      <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><div className="mode-selector" aria-label="表示モード"><span>{easyDisplay ? 'かんじ' : '漢字'}</span><button type="button" className={!easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={!easyDisplay} onClick={() => setEasyDisplay(false)}>あり</button><button type="button" className={easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={easyDisplay} onClick={() => setEasyDisplay(true)}>なし</button></div><button className="help-button" type="button" onClick={() => setShowHelp(true)}>？ つかいかた</button></div></header>
+      {showHelp && <div className="help-backdrop" role="presentation"><section className="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-heading"><h2 id="help-heading">{easyDisplay ? 'このアプリの つかいかた' : 'このアプリの使い方'}</h2><ol>{(easyDisplay ? ['ごぜんの しごとを えらびます', 'はたらいた じかんを いれます', 'ごごの しごとを えらびます', 'できたかずを いれます', 'きんがくを かくにんします'] : ['午前の仕事を選びます', '働いた時間を入力します', '午後の仕事を選びます', '出来高を入力します', '金額を確認します']).map((step) => <li key={step}>{step}</li>)}</ol><button type="button" onClick={() => setShowHelp(false)}>{easyDisplay ? 'とじる' : '閉じる'}</button></section></div>}
       <SessionCard title={easyDisplay ? 'ごぜん' : '午前'} id="am" session={sessions.am} workName={workNames.am} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('am', value)} onChange={(patch) => updateSession('am', patch)} result={result.am} />
       <SessionCard title={easyDisplay ? 'ごご' : '午後'} id="pm" session={sessions.pm} workName={workNames.pm} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('pm', value)} onChange={(patch) => updateSession('pm', patch)} result={result.pm} />
       <section className="card piecework-card" aria-labelledby="piecework-heading"><div className="section-heading"><span className="section-number">3</span><h2 id="piecework-heading">{easyDisplay ? 'できだか' : '出来高'}</h2><span>{easyDisplay ? 'つくった かずに おうじてもらえる きんがくです。' : '作った数におうじてもらえる金額です。'}</span></div>

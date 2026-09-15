@@ -77,4 +77,17 @@ describe('工賃シミュレーター', () => {
     expect(screen.getByLabelText('ごぜんの時間')).toHaveValue(0)
     expect(screen.getByLabelText('ごぜんの分')).toHaveValue(0)
   })
+
+  it('つかいかたビューの文言を表示モードに合わせて切り替える', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '？ つかいかた' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('午前の仕事を選びます')
+    await user.click(screen.getByRole('button', { name: '閉じる' }))
+    await user.click(screen.getByRole('button', { name: 'なし' }))
+    await user.click(screen.getByRole('button', { name: '？ つかいかた' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('ごぜんの しごとを えらびます')
+    expect(screen.queryByRole('dialog')).toHaveTextContent('きんがくを かくにんします')
+  })
 })

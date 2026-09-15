@@ -53,6 +53,7 @@ describe('工賃シミュレーター', () => {
     expect(screen.getByRole('heading', { name: 'できだか' })).toBeInTheDocument()
     expect(screen.getByLabelText('できだか1の単価')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '＋ できだかを ついかする' })).toBeInTheDocument()
+    expect(screen.queryByText('しょうけい')).not.toBeInTheDocument()
     expect(screen.getAllByRole('option', { name: 'るみりゅー わいなりー' })).toHaveLength(2)
     expect(screen.getAllByRole('option', { name: 'るーと ふぁいぶ' })).toHaveLength(2)
     expect(screen.getAllByRole('option', { name: 'はんばいかい さんか' })).toHaveLength(2)

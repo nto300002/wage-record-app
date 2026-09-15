@@ -30,10 +30,11 @@ function App() {
   const [easyDisplay, setEasyDisplay] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [tourStep, setTourStep] = useState(0)
+  const [tourBubble, setTourBubble] = useState({ top: 20, left: 50, below: false })
   const [pieceworks, setPieceworks] = useState<Piecework[]>([{ unitPrice: 10, quantity: 20 }, { unitPrice: 5, quantity: 30 }])
   const [pieceworkNameMode, setPieceworkNameMode] = useState<'select' | 'text'>('select')
   const result = useMemo(() => calculateWage({ ...sessions, pieceworks }), [sessions, pieceworks])
-  const tourTargets = useMemo(() => ['am-work', 'am-hours', 'am-bonus', 'am-total', ...pieceworks.flatMap((_, index) => [`piecework-${index}-name`, `piecework-${index}-price`, `piecework-${index}-quantity`, `piecework-${index}-amount`]), 'total'], [pieceworks])
+  const tourTargets = useMemo(() => ['am-work', 'am-hours', 'am-bonus', 'am-total', ...pieceworks.slice(0, 1).flatMap((_, index) => [`piecework-${index}-name`, `piecework-${index}-price`, `piecework-${index}-quantity`, `piecework-${index}-amount`]), 'total'], [pieceworks])
   const currentTourTarget = tourTargets[tourStep]
   const tourMessage = currentTourTarget === 'am-work' ? (easyDisplay ? 'きょう はたらいた おしごとの ないようを えらびます' : '今日働いた仕事の内容を選びます') : currentTourTarget === 'am-hours' ? (easyDisplay ? 'きょう はたらいた じかん' : '今日働いた時間') : currentTourTarget === 'am-bonus' ? (easyDisplay ? 'おしごとの のうりょくに あわせて こうちんが もらえます' : '仕事の能力に合わせて工賃がもらえます') : currentTourTarget === 'am-total' ? (easyDisplay ? 'これが こうちんの ごうけいです' : 'これが工賃の合計です') : currentTourTarget?.endsWith('-name') ? (easyDisplay ? 'きょう はたらいた おしごとの ないようを えらびます' : '今日働いた仕事の内容を選びます') : currentTourTarget?.endsWith('-price') ? (easyDisplay ? '1こ あたり もらえる きんがく' : '1つあたりもらえる金額') : currentTourTarget?.endsWith('-quantity') ? (easyDisplay ? 'なんこ できたか' : '何個できたか') : currentTourTarget?.endsWith('-amount') ? (easyDisplay ? 'この きんがくが こうちんに はいります' : 'この金額が工賃に入ります') : currentTourTarget === 'total' ? (easyDisplay ? 'これが こうちんの ごうけいです' : 'これが工賃の合計です') : ''
 
@@ -56,6 +57,9 @@ function App() {
       element.classList.add('tour-focus')
       if (element.tagName === 'OUTPUT' || element.classList.contains('total-panel') || element.classList.contains('time-fields')) element.tabIndex = -1
       element.focus()
+      const rect = element.getBoundingClientRect()
+      const below = rect.top < 155
+      setTourBubble({ top: below ? rect.bottom + 16 : rect.top - 140, left: Math.min(Math.max(rect.left + rect.width / 2, 130), window.innerWidth - 130), below })
     }
   }, [showHelp, currentTourTarget])
 
@@ -71,7 +75,7 @@ function App() {
   return (
     <main className="app-shell">
       <header className="app-header"><div><p className="brand-mark">🌱</p><h1>{easyDisplay ? 'こうちんシミュレーター' : '工賃シミュレーター'}</h1><p>{easyDisplay ? 'きょうの がんばりを かたちに' : '今日のがんばりを かたちに'}</p></div><div className="header-actions"><div className="mode-selector" aria-label="表示モード"><span>{easyDisplay ? 'かんじ' : '漢字'}</span><button type="button" className={!easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={!easyDisplay} onClick={() => setEasyDisplay(false)}>あり</button><button type="button" className={easyDisplay ? 'mode-option active' : 'mode-option'} aria-pressed={easyDisplay} onClick={() => setEasyDisplay(true)}>なし</button></div><button className="help-button" type="button" onClick={() => { setTourStep(0); setShowHelp(true) }}>？ つかいかた</button></div></header>
-      {showHelp && <div className="tour-backdrop" role="presentation" onClick={() => tourStep + 1 < tourTargets.length ? setTourStep((step) => step + 1) : setShowHelp(false)}><p className="tour-bubble">{tourMessage}</p><button className="tour-close" type="button" onClick={(event) => { event.stopPropagation(); setShowHelp(false) }}>{easyDisplay ? 'とじる' : '閉じる'}</button></div>}
+      {showHelp && <div className="tour-backdrop" role="presentation" onClick={() => tourStep + 1 < tourTargets.length ? setTourStep((step) => step + 1) : setShowHelp(false)}><p className={tourBubble.below ? 'tour-bubble below' : 'tour-bubble'} style={{ top: tourBubble.top, left: tourBubble.left }}>{tourMessage}</p><button className="tour-close" type="button" onClick={(event) => { event.stopPropagation(); setShowHelp(false) }}>{easyDisplay ? 'とじる' : '閉じる'}</button></div>}
       <SessionCard title={easyDisplay ? 'ごぜん' : '午前'} id="am" session={sessions.am} workName={workNames.am} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('am', value)} onChange={(patch) => updateSession('am', patch)} result={result.am} />
       <SessionCard title={easyDisplay ? 'ごご' : '午後'} id="pm" session={sessions.pm} workName={workNames.pm} easyDisplay={easyDisplay} onWorkChange={(value) => selectWork('pm', value)} onChange={(patch) => updateSession('pm', patch)} result={result.pm} />
       <section className="card piecework-card" aria-labelledby="piecework-heading"><div className="section-heading"><span className="section-number">3</span><h2 id="piecework-heading">{easyDisplay ? 'できだか' : '出来高'}</h2><span>{easyDisplay ? 'つくった かずに おうじてもらえる きんがくです。' : '作った数におうじてもらえる金額です。'}</span></div>

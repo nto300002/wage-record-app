@@ -30,4 +30,16 @@ describe('calculateWage', () => {
     expect(result.piecework).toBe(0)
     expect(result.total).toBe(100)
   })
+
+  it('円未満の端数が出た場合は切り上げる', () => {
+    const result = calculateWage({
+      am: { hourlyRate: 150, hours: 0, minutes: 15, bonus: 0 },
+      pm: { hourlyRate: 0, hours: 0, minutes: 0, bonus: 0 },
+      pieceworks: [{ unitPrice: 10.5, quantity: 1 }],
+    })
+
+    expect(result.am).toBe(38)
+    expect(result.piecework).toBe(11)
+    expect(result.total).toBe(49)
+  })
 })

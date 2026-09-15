@@ -29,19 +29,20 @@ const nonNegative = (value: number) =>
 const calculateSession = ({ hourlyRate, hours, minutes, bonus }: WageSession) => {
   const safeHours = nonNegative(hours)
   const safeMinutes = Number.isFinite(minutes) && minutes >= 0 && minutes < 60 ? minutes : 0
-  return hourlyRate > 0 && Number.isFinite(hourlyRate)
+  const amount = hourlyRate > 0 && Number.isFinite(hourlyRate)
     ? hourlyRate * (safeHours + safeMinutes / 60) + nonNegative(bonus)
     : nonNegative(bonus)
+  return Math.ceil(amount)
 }
 
 export const calculateWage = ({ am, pm, pieceworks }: WageInput): WageResult => {
   const amTotal = calculateSession(am)
   const pmTotal = calculateSession(pm)
-  const pieceworkTotal = pieceworks.reduce((total, item) => {
+  const pieceworkTotal = Math.ceil(pieceworks.reduce((total, item) => {
     const unitPrice = nonNegative(item.unitPrice)
     const quantity = nonNegative(item.quantity)
     return total + unitPrice * quantity
-  }, 0)
+  }, 0))
 
   return {
     am: amTotal,

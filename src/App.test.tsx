@@ -49,6 +49,7 @@ describe('工賃シミュレーター', () => {
     expect(screen.getByRole('button', { name: 'あり' })).toHaveAttribute('aria-pressed', 'true')
     await user.click(screen.getByRole('button', { name: 'なし' }))
 
+    expect(screen.getByText('かんじ')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'なし' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getAllByRole('option', { name: 'きいや' })).toHaveLength(2)
     expect(screen.queryByRole('option', { name: 'KIIYA' })).not.toBeInTheDocument()

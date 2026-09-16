@@ -107,4 +107,19 @@ describe('工賃シミュレーター', () => {
     await user.click(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0])
     expect(screen.getByLabelText('出来高1の名前')).toHaveRole('combobox')
   })
+
+  it('出来高の名前ヘルプで入力欄とその他ボタンを案内する', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getAllByRole('button', { name: '出来高の名前入力ヘルプ' })[0])
+    expect(screen.getByLabelText('出来高1の名前')).toHaveFocus()
+    expect(screen.getByText('ここに今日おこなった仕事がないとき')).toBeInTheDocument()
+    await user.click(screen.getByRole('presentation'))
+    expect(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0]).toHaveFocus()
+    expect(screen.getByText('ここをクリック')).toBeInTheDocument()
+    await user.click(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0])
+    expect(screen.getByLabelText('出来高1の名前')).toHaveFocus()
+    expect(screen.getByText('ここに仕事の名前を入力')).toBeInTheDocument()
+  })
 })

@@ -138,7 +138,10 @@ function useSpeechInput(onText: (text: string) => void) {
 
   useEffect(() => {
     const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition
-    if (!Recognition) return
+    if (!Recognition) {
+      console.warn(`[speech-input] SpeechRecognition API is unavailable speechRecognition=${typeof window.SpeechRecognition} webkitSpeechRecognition=${typeof window.webkitSpeechRecognition} userAgent=${navigator.userAgent}`)
+      return
+    }
     const recognition = new Recognition()
     recognition.lang = 'ja-JP'
     recognition.interimResults = true
@@ -157,11 +160,10 @@ function useSpeechInput(onText: (text: string) => void) {
       if (finalText.trim()) onTextRef.current(finalText.trim())
     }
     recognition.onerror = (event) => {
-      console.error('[speech-input] recognition error:', event.error)
+      console.error(`[speech-input] recognition error code=${event.error} language=${recognition.lang} interimResults=${recognition.interimResults} continuous=${recognition.continuous} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
       setListening(false)
       setInterimText('')
-      const errorMessage = event.error === 'not-allowed' ? 'マイクの使用が許可されていません' : event.error === 'service-not-allowed' || event.error === 'network' ? '音声認識サービスを利用できません' : event.error === 'audio-capture' ? 'マイクを取得できません' : event.error === 'no-speech' ? '音声が検出されませんでした' : `音声認識エラー（${event.error}）`
-      setError(errorMessage)
+      setError('音声を認識できませんでした')
     }
     recognition.onend = () => { setListening(false); setInterimText('') }
     recognitionRef.current = recognition
@@ -174,7 +176,10 @@ function useSpeechInput(onText: (text: string) => void) {
     if (listening) recognitionRef.current.stop()
     else {
       setError('')
-      try { recognitionRef.current.start() } catch { setError('音声入力を開始できませんでした') }
+      try { recognitionRef.current.start() } catch (error) {
+        console.error(`[speech-input] recognition start failed error=${error instanceof Error ? error.message : String(error)} language=${recognitionRef.current.lang} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
+        setError('音声入力を開始できませんでした')
+      }
     }
   }
 

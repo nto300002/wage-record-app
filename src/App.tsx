@@ -126,7 +126,7 @@ function App() {
   )
 }
 
-function useSpeechInput(onText: (text: string) => void) {
+function useSpeechInput(onText: (text: string) => void, context: string) {
   const onTextRef = useRef(onText)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const [supported, setSupported] = useState(false)
@@ -139,7 +139,7 @@ function useSpeechInput(onText: (text: string) => void) {
   useEffect(() => {
     const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition
     if (!Recognition) {
-      console.warn(`[speech-input] SpeechRecognition API is unavailable speechRecognition=${typeof window.SpeechRecognition} webkitSpeechRecognition=${typeof window.webkitSpeechRecognition} userAgent=${navigator.userAgent}`)
+      console.warn(`[speech-input] API unavailable context=${context} SpeechRecognition=${typeof window.SpeechRecognition} webkitSpeechRecognition=${typeof window.webkitSpeechRecognition} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
       return
     }
     const recognition = new Recognition()
@@ -147,7 +147,8 @@ function useSpeechInput(onText: (text: string) => void) {
     recognition.interimResults = true
     recognition.continuous = false
     recognition.maxAlternatives = 1
-    recognition.onstart = () => { setListening(true); setError(''); setInterimText('') }
+    console.info(`[speech-input] instance ready context=${context} language=${recognition.lang} interimResults=${recognition.interimResults} continuous=${recognition.continuous} secureContext=${window.isSecureContext} origin=${window.location.origin}`)
+    recognition.onstart = () => { console.info(`[speech-input] start event context=${context}`); setListening(true); setError(''); setInterimText('') }
     recognition.onresult = (event) => {
       let finalText = ''
       let currentText = ''
@@ -160,12 +161,12 @@ function useSpeechInput(onText: (text: string) => void) {
       if (finalText.trim()) onTextRef.current(finalText.trim())
     }
     recognition.onerror = (event) => {
-      console.error(`[speech-input] recognition error code=${event.error} language=${recognition.lang} interimResults=${recognition.interimResults} continuous=${recognition.continuous} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
+      console.error(`[speech-input] recognition error context=${context} code=${event.error} language=${recognition.lang} interimResults=${recognition.interimResults} continuous=${recognition.continuous} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
       setListening(false)
       setInterimText('')
       setError('音声を認識できませんでした')
     }
-    recognition.onend = () => { setListening(false); setInterimText('') }
+    recognition.onend = () => { console.info(`[speech-input] end event context=${context}`); setListening(false); setInterimText('') }
     recognitionRef.current = recognition
     setSupported(true)
     return () => { recognition.abort(); recognitionRef.current = null }
@@ -176,8 +177,9 @@ function useSpeechInput(onText: (text: string) => void) {
     if (listening) recognitionRef.current.stop()
     else {
       setError('')
+      console.info(`[speech-input] start requested context=${context} language=${recognitionRef.current.lang} secureContext=${window.isSecureContext} origin=${window.location.origin}`)
       try { recognitionRef.current.start() } catch (error) {
-        console.error(`[speech-input] recognition start failed error=${error instanceof Error ? error.message : String(error)} language=${recognitionRef.current.lang} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
+        console.error(`[speech-input] start exception context=${context} error=${error instanceof Error ? error.message : String(error)} language=${recognitionRef.current.lang} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
         setError('音声入力を開始できませんでした')
       }
     }

@@ -96,6 +96,7 @@ describe('工賃シミュレーター', () => {
     const user = userEvent.setup()
     render(<App />)
 
+    expect(screen.getAllByText('仕事の名前')).toHaveLength(2)
     expect(screen.getByLabelText('出来高1の名前')).toHaveRole('combobox')
     expect(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0]).toHaveTextContent('その他')
     await user.click(screen.getAllByRole('button', { name: '出来高の名前入力方式を切り替える' })[0])

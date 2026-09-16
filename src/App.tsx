@@ -156,7 +156,13 @@ function useSpeechInput(onText: (text: string) => void) {
       setInterimText(currentText)
       if (finalText.trim()) onTextRef.current(finalText.trim())
     }
-    recognition.onerror = () => { setListening(false); setInterimText(''); setError('音声を認識できませんでした') }
+    recognition.onerror = (event) => {
+      console.error('[speech-input] recognition error:', event.error)
+      setListening(false)
+      setInterimText('')
+      const errorMessage = event.error === 'not-allowed' ? 'マイクの使用が許可されていません' : event.error === 'service-not-allowed' || event.error === 'network' ? '音声認識サービスを利用できません' : event.error === 'audio-capture' ? 'マイクを取得できません' : event.error === 'no-speech' ? '音声が検出されませんでした' : `音声認識エラー（${event.error}）`
+      setError(errorMessage)
+    }
     recognition.onend = () => { setListening(false); setInterimText('') }
     recognitionRef.current = recognition
     setSupported(true)
@@ -180,7 +186,7 @@ function PieceworkNameField({ index, piecework, easyDisplay, mode, onChange, onT
   const nameLabel = easyDisplay ? 'しごとの なまえ' : '仕事の名前'
   const placeholder = easyDisplay ? 'しごとの なまえを にゅうりょく' : '仕事の名前を入力'
   const speech = useSpeechInput((text) => onChange({ name: `${piecework.name ?? ''}${piecework.name ? ' ' : ''}${text}` }))
-  return <label><span className="piecework-name-heading">{nameLabel}<span className="name-mode-actions"><button type="button" aria-label="出来高の名前入力ヘルプ" className="name-help-button" onClick={onHelp}><FiHelpCircle aria-hidden="true" /></button><button type="button" aria-label="出来高の名前入力方式を切り替える" className="name-mode-button" onClick={onToggle}>{mode === 'select' ? (easyDisplay ? 'そのた' : 'その他') : (easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ')}</button></span></span>{mode === 'select' ? <select aria-label={label} value={piecework.name ?? ''} onChange={(event) => onChange({ name: event.target.value })}><option value="">{easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ'}</option>{WORK_ITEMS.map((workItem) => <option key={workItem.id} value={workItem.id}>{easyDisplay ? workItem.easyName : workItem.name}</option>)}</select> : <><span className="piecework-input-control"><input className="piecework-name-input" aria-label={label} value={piecework.name ?? ''} placeholder={placeholder} onChange={(event) => onChange({ name: event.target.value })} />{speech.supported && <button type="button" className={speech.listening ? 'voice-input-button listening' : 'voice-input-button'} aria-label={speech.listening ? '音声入力を停止' : '音声入力を開始'} aria-pressed={speech.listening} onClick={speech.toggle}><FiMic aria-hidden="true" /></button>}</span>{speech.listening && <span className="voice-input-status">{speech.interimText || '話してください'}</span>}{speech.error && <span className="voice-input-error" role="alert">{speech.error}</span>}</>}</label>
+  return <div className="piecework-name-field"><div className="piecework-name-heading"><span>{nameLabel}</span><span className="name-mode-actions"><button type="button" aria-label="出来高の名前入力ヘルプ" className="name-help-button" onClick={onHelp}><FiHelpCircle aria-hidden="true" /></button><button type="button" aria-label="出来高の名前入力方式を切り替える" className="name-mode-button" onClick={onToggle}>{mode === 'select' ? (easyDisplay ? 'そのた' : 'その他') : (easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ')}</button></span></div>{mode === 'select' ? <label><select aria-label={label} value={piecework.name ?? ''} onChange={(event) => onChange({ name: event.target.value })}><option value="">{easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ'}</option>{WORK_ITEMS.map((workItem) => <option key={workItem.id} value={workItem.id}>{easyDisplay ? workItem.easyName : workItem.name}</option>)}</select></label> : <><label className="piecework-input-control"><input className="piecework-name-input" aria-label={label} value={piecework.name ?? ''} placeholder={placeholder} onChange={(event) => onChange({ name: event.target.value })} />{speech.supported && <button type="button" className={speech.listening ? 'voice-input-button listening' : 'voice-input-button'} aria-label={speech.listening ? '音声入力を停止' : '音声入力を開始'} aria-pressed={speech.listening} onClick={speech.toggle}><FiMic aria-hidden="true" /></button>}</label>{speech.listening && <span className="voice-input-status">{speech.interimText || '話してください'}</span>}{speech.error && <span className="voice-input-error" role="alert">{speech.error}</span>}</>}</div>
 }
 
 function SessionCard({ title, id, session, workName, easyDisplay, onWorkChange, onChange, result }: { title: string; id: SessionKey; session: WageSession; workName: string; easyDisplay: boolean; onWorkChange: (value: string) => void; onChange: (patch: Partial<WageSession>) => void; result: number }) {

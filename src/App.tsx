@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { FiHelpCircle, FiMic } from 'react-icons/fi'
+import { useEffect, useMemo, useState } from 'react'
+import { FiHelpCircle } from 'react-icons/fi'
 import { calculateWage, type Piecework, type WageSession } from './domain/calculation'
 
 const WORK_ITEMS = [
@@ -21,27 +21,6 @@ const BONUSES = [0, 50, 100, 200, 300, 400, 500]
 const emptySession = (): WageSession => ({ hourlyRate: 0, hours: 0, minutes: 0, bonus: 0 })
 const emptyPiecework = (): Piecework => ({ name: '', unitPrice: 0, quantity: 0 })
 type SessionKey = 'am' | 'pm'
-
-type SpeechRecognitionLike = {
-  lang: string
-  interimResults: boolean
-  continuous: boolean
-  maxAlternatives: number
-  start: () => void
-  stop: () => void
-  abort: () => void
-  onstart: (() => void) | null
-  onend: (() => void) | null
-  onerror: ((event: { error: string }) => void) | null
-  onresult: ((event: { results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null
-}
-type SpeechRecognitionConstructor = new () => SpeechRecognitionLike
-declare global {
-  interface Window {
-    SpeechRecognition?: SpeechRecognitionConstructor
-    webkitSpeechRecognition?: SpeechRecognitionConstructor
-  }
-}
 
 function App() {
   const [sessions, setSessions] = useState<Record<SessionKey, WageSession>>({
@@ -126,74 +105,11 @@ function App() {
   )
 }
 
-function useSpeechInput(onText: (text: string) => void, context: string) {
-  const onTextRef = useRef(onText)
-  const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
-  const [supported, setSupported] = useState(false)
-  const [listening, setListening] = useState(false)
-  const [interimText, setInterimText] = useState('')
-  const [error, setError] = useState('')
-
-  onTextRef.current = onText
-
-  useEffect(() => {
-    const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition
-    if (!Recognition) {
-      console.warn(`[speech-input] API unavailable context=${context} SpeechRecognition=${typeof window.SpeechRecognition} webkitSpeechRecognition=${typeof window.webkitSpeechRecognition} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
-      return
-    }
-    const recognition = new Recognition()
-    recognition.lang = 'ja-JP'
-    recognition.interimResults = true
-    recognition.continuous = false
-    recognition.maxAlternatives = 1
-    console.info(`[speech-input] instance ready context=${context} language=${recognition.lang} interimResults=${recognition.interimResults} continuous=${recognition.continuous} secureContext=${window.isSecureContext} origin=${window.location.origin}`)
-    recognition.onstart = () => { console.info(`[speech-input] start event context=${context}`); setListening(true); setError(''); setInterimText('') }
-    recognition.onresult = (event) => {
-      let finalText = ''
-      let currentText = ''
-      for (let index = 0; index < event.results.length; index += 1) {
-        const result = event.results[index]
-        if (result.isFinal) finalText += result[0].transcript
-        else currentText += result[0].transcript
-      }
-      setInterimText(currentText)
-      if (finalText.trim()) onTextRef.current(finalText.trim())
-    }
-    recognition.onerror = (event) => {
-      console.error(`[speech-input] recognition error context=${context} code=${event.error} language=${recognition.lang} interimResults=${recognition.interimResults} continuous=${recognition.continuous} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
-      setListening(false)
-      setInterimText('')
-      setError('音声を認識できませんでした')
-    }
-    recognition.onend = () => { console.info(`[speech-input] end event context=${context}`); setListening(false); setInterimText('') }
-    recognitionRef.current = recognition
-    setSupported(true)
-    return () => { recognition.abort(); recognitionRef.current = null }
-  }, [])
-
-  const toggle = () => {
-    if (!recognitionRef.current) return
-    if (listening) recognitionRef.current.stop()
-    else {
-      setError('')
-      console.info(`[speech-input] start requested context=${context} language=${recognitionRef.current.lang} secureContext=${window.isSecureContext} origin=${window.location.origin}`)
-      try { recognitionRef.current.start() } catch (error) {
-        console.error(`[speech-input] start exception context=${context} error=${error instanceof Error ? error.message : String(error)} language=${recognitionRef.current.lang} secureContext=${window.isSecureContext} origin=${window.location.origin} userAgent=${navigator.userAgent}`)
-        setError('音声入力を開始できませんでした')
-      }
-    }
-  }
-
-  return { supported, listening, interimText, error, toggle }
-}
-
 function PieceworkNameField({ index, piecework, easyDisplay, mode, onChange, onToggle, onHelp }: { index: number; piecework: Piecework; easyDisplay: boolean; mode: 'select' | 'text'; onChange: (patch: Partial<Piecework>) => void; onToggle: () => void; onHelp: () => void }) {
   const label = `${easyDisplay ? 'できだか' : '出来高'}${index + 1}の名前`
   const nameLabel = easyDisplay ? 'しごとの なまえ' : '仕事の名前'
   const placeholder = easyDisplay ? 'しごとの なまえを にゅうりょく' : '仕事の名前を入力'
-  const speech = useSpeechInput((text) => onChange({ name: `${piecework.name ?? ''}${piecework.name ? ' ' : ''}${text}` }))
-  return <div className="piecework-name-field"><div className="piecework-name-heading"><span>{nameLabel}</span><span className="name-mode-actions"><button type="button" aria-label="出来高の名前入力ヘルプ" className="name-help-button" onClick={onHelp}><FiHelpCircle aria-hidden="true" /></button><button type="button" aria-label="出来高の名前入力方式を切り替える" className="name-mode-button" onClick={onToggle}>{mode === 'select' ? (easyDisplay ? 'そのた' : 'その他') : (easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ')}</button></span></div>{mode === 'select' ? <label><select aria-label={label} value={piecework.name ?? ''} onChange={(event) => onChange({ name: event.target.value })}><option value="">{easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ'}</option>{WORK_ITEMS.map((workItem) => <option key={workItem.id} value={workItem.id}>{easyDisplay ? workItem.easyName : workItem.name}</option>)}</select></label> : <><label className="piecework-input-control"><input className="piecework-name-input" aria-label={label} value={piecework.name ?? ''} placeholder={placeholder} onChange={(event) => onChange({ name: event.target.value })} />{speech.supported && <button type="button" className={speech.listening ? 'voice-input-button listening' : 'voice-input-button'} aria-label={speech.listening ? '音声入力を停止' : '音声入力を開始'} aria-pressed={speech.listening} onClick={speech.toggle}><FiMic aria-hidden="true" /></button>}</label>{speech.listening && <span className="voice-input-status">{speech.interimText || '話してください'}</span>}{speech.error && <span className="voice-input-error" role="alert">{speech.error}</span>}</>}</div>
+  return <label><span className="piecework-name-heading">{nameLabel}<span className="name-mode-actions"><button type="button" aria-label="出来高の名前入力ヘルプ" className="name-help-button" onClick={onHelp}><FiHelpCircle aria-hidden="true" /></button><button type="button" aria-label="出来高の名前入力方式を切り替える" className="name-mode-button" onClick={onToggle}>{mode === 'select' ? (easyDisplay ? 'そのた' : 'その他') : (easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ')}</button></span></span>{mode === 'select' ? <select aria-label={label} value={piecework.name ?? ''} onChange={(event) => onChange({ name: event.target.value })}><option value="">{easyDisplay ? 'しごとを えらぶ' : '仕事を選ぶ'}</option>{WORK_ITEMS.map((workItem) => <option key={workItem.id} value={workItem.id}>{easyDisplay ? workItem.easyName : workItem.name}</option>)}</select> : <input className="piecework-name-input" aria-label={label} value={piecework.name ?? ''} placeholder={placeholder} onChange={(event) => onChange({ name: event.target.value })} />}</label>
 }
 
 function SessionCard({ title, id, session, workName, easyDisplay, onWorkChange, onChange, result }: { title: string; id: SessionKey; session: WageSession; workName: string; easyDisplay: boolean; onWorkChange: (value: string) => void; onChange: (patch: Partial<WageSession>) => void; result: number }) {

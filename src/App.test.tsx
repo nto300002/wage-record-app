@@ -112,7 +112,10 @@ describe('工賃シミュレーター', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getAllByRole('button', { name: '出来高の名前入力ヘルプ' })[0])
+    const helpButton = screen.getAllByRole('button', { name: '出来高の名前入力ヘルプ' })[0]
+    await user.click(helpButton)
+    expect(screen.queryByRole('presentation')).not.toBeInTheDocument()
+    await user.click(helpButton.querySelector('svg') as SVGElement)
     expect(screen.getByLabelText('出来高1の名前')).toHaveFocus()
     expect(screen.getByText('ここに今日おこなった仕事がないとき')).toBeInTheDocument()
     await user.click(screen.getByRole('presentation'))
